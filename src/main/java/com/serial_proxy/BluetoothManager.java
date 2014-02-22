@@ -20,14 +20,22 @@ public class BluetoothManager implements ISocket {
        if(bluetoothAdapter==null) {
            throw new IllegalStateException("Bluetooth is down. Please enable bluetooth");
        }
+
     }
 
     public void connectToDevice() throws IOException {
-        LOG.debug("Connecting to device...");
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice("20:13:03:03:27:6F");
-        LOG.debug("Device is %s", device.toString());
 
+        LOG.debug("Device is %s - %s", device.getName(), device.getAddress());
+
+        LOG.debug("Creating BT socket...");
         socket = device.createRfcommSocketToServiceRecord(UUID.fromString(SPP_UUID));
+
+        if(!bluetoothAdapter.cancelDiscovery()) {
+            LOG.warn("Can't cancel discovery");
+        }
+
+        LOG.debug("Connecting to device...");
         socket.connect();
         LOG.debug("Connected");
     }
