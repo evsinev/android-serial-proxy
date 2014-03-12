@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 import java.util.UUID;
 
 public class BluetoothManager implements ISocket {
@@ -21,10 +22,24 @@ public class BluetoothManager implements ISocket {
            throw new IllegalStateException("Bluetooth is down. Please enable bluetooth");
        }
 
+       this.deviceAddress = getFirstBluetoothDevice().getAddress();
+
+    }
+
+    private BluetoothDevice getFirstBluetoothDevice() {
+        LOG.debug("Searching paired devices ...");
+        Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+        if(bondedDevices==null || bondedDevices.isEmpty()) {
+            throw new IllegalStateException("No paired devices");
+        }
+
+        BluetoothDevice device = bondedDevices.iterator().next();
+        LOG.debug("  First device is %s : %s", device.getName(), device.getAddress());
+        return device;
     }
 
     public void connectToDevice() throws IOException {
-        BluetoothDevice device = bluetoothAdapter.getRemoteDevice("20:13:03:03:27:6F");
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
 
         LOG.debug("Device is %s - %s", device.getName(), device.getAddress());
 
@@ -64,6 +79,7 @@ public class BluetoothManager implements ISocket {
         }
     }
 
+    private final String deviceAddress;
     private BluetoothSocket socket;
     BluetoothAdapter bluetoothAdapter;
 }

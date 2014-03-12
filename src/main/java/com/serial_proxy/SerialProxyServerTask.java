@@ -51,7 +51,7 @@ public class SerialProxyServerTask implements Runnable {
             }
 
         } catch (Exception e) {
-            LOG.error("Main cycle error", e);
+            LOG.error("Main cycle error: "+e.getMessage(), e);
         }
     }
 
