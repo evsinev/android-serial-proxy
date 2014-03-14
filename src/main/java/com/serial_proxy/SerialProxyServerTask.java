@@ -1,19 +1,33 @@
 package com.serial_proxy;
 
-import java.io.IOError;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.serial_proxy.bluetooth.BluetoothManager;
+import com.serial_proxy.settings.BindingProfile;
 
-public class SerialProxyServerTask implements Runnable {
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class SerialProxyServerTask extends Thread  {
 
     private static final Logger LOG = Logger.create(SerialProxyServerTask.class);
+
+    private static final AtomicInteger THREAD_INDEX = new AtomicInteger(0);
+
+    private final BindingProfile profile;
+    private final NetworkManager network;
+    private final BluetoothManager serial;
+
+    public SerialProxyServerTask(BindingProfile aProfile) {
+        profile = aProfile;
+        network = new NetworkManager(profile.port);
+        serial = new BluetoothManager(profile.bluetoothAddress);
+    }
 
     @Override
     public void run() {
         try {
 
-            NetworkManager network = new NetworkManager();
-            BluetoothManager serial = new BluetoothManager();
+            setName(profile.title+"-"+THREAD_INDEX.incrementAndGet());
 
+            network.open();
             while (!Thread.currentThread().isInterrupted()) {
                 network.acceptConnection();
 
@@ -32,7 +46,7 @@ public class SerialProxyServerTask implements Runnable {
                             break;
                         }
 
-//                        LOG.debug("Waiting for data. Sleep(1000)...");
+                        LOG.debug("Waiting for data. Sleep(1000)...");
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException e) {
@@ -53,6 +67,11 @@ public class SerialProxyServerTask implements Runnable {
         } catch (Exception e) {
             LOG.error("Main cycle error: "+e.getMessage(), e);
         }
+    }
+
+    public void cancel() {
+        network.stopListening();
+        interrupt();
     }
 
 }

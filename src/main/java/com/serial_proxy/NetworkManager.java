@@ -16,8 +16,13 @@ public class NetworkManager implements ISocket {
 
     private static final Logger LOG = Logger.create(NetworkManager.class);
 
-    public NetworkManager() throws IOException {
-         serverSocket = new ServerSocket(1234);
+    private final int port;
+    public NetworkManager(int aPort)  {
+        port = aPort;
+    }
+
+    public void open() throws IOException {
+        serverSocket = new ServerSocket(port);
     }
 
     public void acceptConnection() throws IOException {
@@ -46,7 +51,7 @@ public class NetworkManager implements ISocket {
 
     /**
      * Get IP address from first non-localhost interface
-     * @param ipv4  true=return ipv4, false=return ipv6
+     * @param useIPv4  true=return ipv4, false=return ipv6
      * @return  address or empty string
      */
     public static String getIPAddress(boolean useIPv4) {
@@ -75,13 +80,22 @@ public class NetworkManager implements ISocket {
     }
 
     private Socket socket;
-    private final ServerSocket serverSocket;
+    private ServerSocket serverSocket;
 
     public void close() {
+
         try {
             socket.close();
         } catch (IOException e) {
             LOG.error("error closing socket", e);
+        }
+    }
+
+    public void stopListening() {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            LOG.error("Error closing server socket", e);
         }
     }
 }

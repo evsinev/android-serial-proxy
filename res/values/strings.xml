@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">serial proxy</string>
+    <string name="binding_title">Binding</string>
+    <string name="menu_settings_title">Settings</string>
+    <string name="menu_add_binding">Add Binding</string>
+    <string name="binding_menu_edit">Edit</string>
+    <string name="binding_menu_delete">Delete</string>
+    <string name="binding_cancel">Cancel</string>
+    <string name="binding_add">Add Binding</string>
 </resources>
