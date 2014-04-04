@@ -6,8 +6,6 @@ import java.io.OutputStream;
 
 public interface ISocket {
 
-    boolean isConnected();
-
     InputStream getInputStream() throws IOException;
 
     OutputStream getOutputStream() throws IOException;

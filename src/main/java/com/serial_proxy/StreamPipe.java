@@ -1,39 +1,44 @@
 package com.serial_proxy;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
 
-public class StreamPipe {
+public class StreamPipe extends Thread {
 
     private final Logger LOG = Logger.create(StreamPipe.class);
 
-    public StreamPipe(String aName, InputStream aInput, OutputStream aOut) {
+    public StreamPipe(String aName, CountDownLatch aLatch, InputStream aInput, OutputStream aOut) {
         input = aInput;
         output = aOut;
-        lastAvailableTime = System.currentTimeMillis();
         name = aName;
+        latch = aLatch;
+        setName( name );
     }
 
-    public void writeIfAvailable() throws IOException {
-
-        if(lastAvailableTime < System.currentTimeMillis() - 60000) {
-            throw new IOException("Input timeout");
-        }
-
-        if(input.available()>0) {
-            lastAvailableTime = System.currentTimeMillis();
-            int count = input.read(buffer);
-            LOG.debug("%s: %s ...", name, HexUtil.toHexString(buffer, 0, count));
-            if(count>0) {
-                output.write(buffer, 0, count);
+    @Override
+    public void run() {
+        try {
+            while(true) {
+                LOG.debug("    %s: Waiting for data...", name);
+                int count = input.read(buffer);
+                if(count<0) {
+                    LOG.debug("    %s: socket closed", name);
+                    break;
+                } else {
+                    LOG.debug("    %s: %s ...", name, HexUtil.toHexString(buffer, 0, count));
+                    output.write(buffer, 0, count);
+                }
             }
+        } catch (Exception e) {
+            LOG.error("io error", e);
         }
+        latch.countDown();
     }
 
-    private long lastAvailableTime;
     private final byte[] buffer = new byte[1024];
     private final InputStream input;
     private final OutputStream output;
     private String name;
+    private final CountDownLatch latch;
 }

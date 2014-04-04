@@ -27,8 +27,9 @@ public class NetworkManager implements ISocket {
 
     public void acceptConnection() throws IOException {
 
-         LOG.debug("Accepting connection on %s:%d ...", getIPAddress(true),serverSocket.getLocalPort());
-         socket = serverSocket.accept();
+        LOG.debug("Listening on %s:%d ...", getIPAddress(true), serverSocket.getLocalPort());
+        socket = serverSocket.accept();
+        socket.setSoTimeout(60000);
         LOG.debug("Accepted: %s", socket.toString());
 
     }
@@ -39,14 +40,6 @@ public class NetworkManager implements ISocket {
 
     public OutputStream getOutputStream() throws IOException {
         return socket.getOutputStream();
-    }
-
-    public boolean isConnected() {
-        boolean connected = socket.isConnected();
-        if(!connected) {
-            LOG.debug("Not connected");
-        }
-        return connected;
     }
 
     /**
@@ -83,8 +76,13 @@ public class NetworkManager implements ISocket {
     private ServerSocket serverSocket;
 
     public void close() {
-
+        LOG.debug("Closing connection");
         try {
+            socket.getOutputStream().flush();
+            socket.getOutputStream().close();
+//            socket.getInputStream().close();
+//            socket.shutdownOutput();
+//            socket.shutdownInput();
             socket.close();
         } catch (IOException e) {
             LOG.error("error closing socket", e);
@@ -92,10 +90,14 @@ public class NetworkManager implements ISocket {
     }
 
     public void stopListening() {
-        try {
-            serverSocket.close();
-        } catch (IOException e) {
-            LOG.error("Error closing server socket", e);
+        if(serverSocket==null) {
+            LOG.warn("Server socket in not bound");
+        } else {
+            try {
+                serverSocket.close();
+            } catch (Exception e) {
+                LOG.error("Error closing server socket", e);
+            }
         }
     }
 }

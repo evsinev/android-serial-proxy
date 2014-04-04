@@ -65,9 +65,13 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        stopThreads();
-
-        startThreads();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                stopThreads();
+                startThreads();
+            }
+        }).start();
     }
 
     private void startThreads() {

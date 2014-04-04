@@ -3,6 +3,7 @@ package com.serial_proxy;
 import com.serial_proxy.bluetooth.BluetoothManager;
 import com.serial_proxy.settings.BindingProfile;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SerialProxyServerTask extends Thread  {
@@ -32,33 +33,30 @@ public class SerialProxyServerTask extends Thread  {
                 network.acceptConnection();
 
                 try {
-
                     serial.connectToDevice();
+                    try {
+                        CountDownLatch latch = new CountDownLatch(1);
 
-                    StreamPipe networkSerial = new StreamPipe("net-bt", network.getInputStream(), serial.getOutputStream());
-                    StreamPipe serialNetwork = new StreamPipe("bt-net", serial.getInputStream(), network.getOutputStream());
-                    while(network.isConnected() && serial.isConnected()) {
-                        try {
-                            networkSerial.writeIfAvailable();
-                            serialNetwork.writeIfAvailable();
-                        } catch (Exception e) {
-                            LOG.error("Communication failure", e);
-                            break;
-                        }
+                        StreamPipe networkSerial = new StreamPipe("net-bt", latch, network.getInputStream(), serial.getOutputStream());
+                        StreamPipe serialNetwork = new StreamPipe("bt-net", latch, serial.getInputStream(), network.getOutputStream());
 
-                        LOG.debug("Waiting for data. Sleep(1000)...");
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            break;
-                        }
+                        networkSerial.start();
+                        serialNetwork.start();
+
+                        LOG.debug("Waiting first to exist...");
+                        latch.await();
+                        LOG.debug("Exited");
+
+                        networkSerial.interrupt();
+                        serialNetwork.interrupt();
+
+                    } finally {
+                        serial.close();
                     }
 
                 } catch (Exception e) {
                     LOG.error("Can't connect to device", e);
                 } finally {
-                    serial.close();
                     network.close();
                 }
 

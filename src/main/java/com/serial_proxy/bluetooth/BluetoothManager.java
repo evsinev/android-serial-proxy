@@ -71,14 +71,6 @@ public class BluetoothManager implements ISocket, IBluetoothManager {
         LOG.debug("Connected");
     }
 
-    public boolean isConnected() {
-        boolean connected = socket.isConnected();
-        if(!connected) {
-            LOG.debug("Not connected");
-        }
-        return connected;
-    }
-
     public InputStream getInputStream() throws IOException {
         return socket.getInputStream();
     }
