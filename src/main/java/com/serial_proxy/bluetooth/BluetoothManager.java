@@ -17,6 +17,8 @@ public class BluetoothManager implements ISocket, IBluetoothManager {
     public static final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
 
     private static final Logger LOG = Logger.create(BluetoothManager.class);
+    public static final int MAX_CONNECT_ATTEMPTS = 3;
+    public static final int SLEEP_MS_BETWEEN_CONNECT = 1000;
 
     public BluetoothManager(String aAddress) {
        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -55,6 +57,40 @@ public class BluetoothManager implements ISocket, IBluetoothManager {
     }
 
     public void connectToDevice() throws IOException {
+        IOException lastException = null;
+
+        for (int i = 0; i < MAX_CONNECT_ATTEMPTS; i++) {
+            try {
+                LOG.debug("{} attempt to connect", i + i);
+                tryConnectToDevice();
+                return;
+            } catch (IOException e) {
+                lastException = e;
+                LOG.warn("Can't connect to device: {}. Sleeping 1 seconds...", e.getMessage());
+                sleep(i);
+            }
+        }
+        if (lastException == null) {
+            throw new IllegalStateException("Unknown state. LastException must be filled.");
+        }
+
+        throw lastException;
+    }
+
+    private void sleep(int i) {
+        // skips sleeping if last attempt
+        if(i<MAX_CONNECT_ATTEMPTS-1) {
+            return;
+        }
+
+        try {
+            Thread.sleep(SLEEP_MS_BETWEEN_CONNECT);
+        } catch (InterruptedException e1) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void tryConnectToDevice() throws IOException {
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(deviceAddress);
 
         LOG.debug("Device is %s - %s", device.getName(), device.getAddress());
