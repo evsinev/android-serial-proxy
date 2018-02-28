@@ -13,4 +13,9 @@ tests-test/*.iml
 .project
 target
 .idea
+app/build
+build
+.gradle
 *~
+local.properties
+
