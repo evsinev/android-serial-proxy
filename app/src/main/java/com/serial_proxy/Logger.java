@@ -1,12 +1,34 @@
 package com.serial_proxy;
 
-import android.app.Activity;
+import android.os.Environment;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class Logger {
 
-    public static void setActivity(MainActivity aActivity) {
-          ACTIVITY = aActivity;
+    private static volatile File         FILE;
+    private static volatile WeakReference<MainActivity> ACTIVITY;
+
+    private final String tag;
+
+    static void setActivity(MainActivity aActivity) {
+        FILE = new File(Environment.getExternalStorageDirectory(), "sproxy-" + System.currentTimeMillis() + ".txt");
+        ACTIVITY = new WeakReference<>(aActivity);
+        if(writeToFile("File created")) {
+            aActivity.log("You can find all logs in the " + FILE.getAbsolutePath());
+        } else {
+            aActivity.log("Cannot write to file " + FILE.getAbsolutePath());
+        }
+
+
     }
 
     public static Logger create(Class aClass) {
@@ -46,13 +68,33 @@ public class Logger {
     }
 
     private static void logOnActivity(String aLevel, String aFormat, Object... args) {
-        if(ACTIVITY!=null) {
-            ACTIVITY.log(aLevel+" "+formatString(aFormat, args));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.ENGLISH);
+        String message = dateFormat.format(new Date()) + " " + aLevel + " " + formatString(aFormat, args);
+
+        MainActivity mainActivity = ACTIVITY.get();
+        if(mainActivity != null) {
+            mainActivity.log(message);
+        }
+
+        if(FILE !=null ) {
+            writeToFile(message);
         }
     }
 
-    private static MainActivity ACTIVITY;
-    private final String tag;
+    private static boolean writeToFile(String message) {
+        try {
+            PrintWriter out = new PrintWriter(new FileWriter(FILE, true));
+            try {
+                out.println(message);
+            } finally {
+                out.close();
+            }
+            return true;
+        } catch (IOException e) {
+            Log.e("sproxy", "Cannot log message " + message, e);
+            return false;
+        }
+    }
 
     public static Logger create(String aName) {
         return new Logger("sproxy."+aName);

@@ -3,12 +3,12 @@ package com.serial_proxy;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
 import com.serial_proxy.settings.BindingProfile;
 import com.serial_proxy.settings.ProfilesManager;
 import com.serial_proxy.settings.SettingsActivity;

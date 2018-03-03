@@ -26,9 +26,9 @@ public class NetworkManager implements ISocket {
     }
 
     public void open() throws IOException {
-        serverSocket = new ServerSocket();
+        serverSocket = new ServerSocket(port);
         serverSocket.setReuseAddress(true);
-        serverSocket.bind(new InetSocketAddress(findAddress(), port));
+        LOG.debug("Public ip address is: " + findAddress() +". Run 'adb forward tcp:12345 tcp:12345' and connect from your PC to localhost:12345");
     }
 
     public void acceptConnection() throws IOException {
